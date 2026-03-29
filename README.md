@@ -153,15 +153,6 @@ Logs are automatically saved to the `logs/` directory.
 | Logging | `bot/logging_config.py` | Dual-output logger (console + file) |
 | Dashboard | `app.py` + `templates/` | Flask web UI (bonus) |
 
----
-
-## ✅ Order Types Supported
-
-| Type | Required Parameters |
-|------|---------------------|
-| `MARKET` | `--symbol` `--side` `--quantity` |
-| `LIMIT` | `--symbol` `--side` `--quantity` `--price` |
-| `STOP_MARKET` | `--symbol` `--side` `--quantity` `--stop-price` |
 
 ---
 
