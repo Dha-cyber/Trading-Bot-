@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trading Bot Dashboard</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0a0c0f;
+        --bg2: #0f1215;
+        --bg3: #161b20;
+        --bg4: #1e2530;
+        --border: #1e2a35;
+        --border2: #263040;
+        --text: #c8d8e8;
+        --text2: #7a90a4;
+        --text3: #4a5f72;
+        --green: #00e676;
+        --green-bg: #00e67610;
+        --green-border: #00e67630;
+        --red: #ff4757;
+        --red-bg: #ff475710;
+        --red-border: #ff475730;
+        --blue: #2979ff;
+        --blue-bg: #2979ff12;
+        --amber: #ffab00;
+        --amber-bg: #ffab0010;
+        --mono: "IBM Plex Mono", monospace;
+        --sans: "IBM Plex Sans", sans-serif;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.5;
+        min-height: 100vh;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 2px;
+      }
+
+      /* ── TOPBAR ── */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        height: 52px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg2);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .logo {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: #fff;
+      }
+      .logo span {
+        color: var(--green);
+      }
+      .badge-testnet {
+        font-size: 10px;
+        font-weight: 500;
+        padding: 3px 8px;
+        border-radius: 3px;
+        border: 1px solid var(--green-border);
+        background: var(--green-bg);
+        color: var(--green);
+        letter-spacing: 0.05em;
+      }
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .price-ticker {
+        font-size: 12px;
+        color: var(--text2);
+      }
+      .price-ticker span {
+        color: var(--green);
+        font-weight: 500;
+      }
+      .conn-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--green);
+        display: inline-block;
+        margin-right: 6px;
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      /* ── LAYOUT ── */
+      .layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        grid-template-rows: auto 1fr;
+        min-height: calc(100vh - 52px);
+      }
+      .sidebar {
+        grid-row: 1 / 3;
+        border-right: 1px solid var(--border);
+        padding: 20px 16px;
+        background: var(--bg2);
+        overflow-y: auto;
+      }
+      .main {
+        padding: 20px 24px;
+        overflow-y: auto;
+      }
+
+      /* ── PANELS ── */
+      .panel {
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg4);
+      }
+      .panel-title {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        color: var(--text3);
+        text-transform: uppercase;
+      }
+      .panel-body {
+        padding: 14px;
+      }
+
+      /* ── METRICS ── */
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .metric-card {
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 14px 16px;
+      }
+      .metric-label {
+        font-size: 10px;
+        color: var(--text3);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        font-family: var(--sans);
+      }
+      .metric-value {
+        font-size: 22px;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: -0.02em;
+      }
+      .metric-sub {
+        font-size: 11px;
+        color: var(--text2);
+        margin-top: 3px;
+        font-family: var(--sans);
+      }
+      .metric-value.green {
+        color: var(--green);
+      }
+      .metric-value.red {
+        color: var(--red);
+      }
+
+      /* ── SIDE TOGGLE ── */
+      .side-toggle {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        border-radius: 5px;
+        overflow: hidden;
+        border: 1px solid var(--border2);
+        margin-bottom: 14px;
+      }
+      .side-btn {
+        padding: 9px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--text2);
+        font-family: var(--mono);
+        letter-spacing: 0.05em;
+        transition: all 0.15s;
+      }
+      .side-btn.active-buy {
+        background: var(--green-bg);
+        color: var(--green);
+        border-bottom: 2px solid var(--green);
+      }
+      .side-btn.active-sell {
+        background: var(--red-bg);
+        color: var(--red);
+        border-bottom: 2px solid var(--red);
+      }
+
+      /* ── ORDER TYPE TABS ── */
+      .type-tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 14px;
+      }
+      .type-tab {
+        font-size: 10px;
+        padding: 5px 10px;
+        border-radius: 3px;
+        border: 1px solid var(--border2);
+        background: transparent;
+        cursor: pointer;
+        font-family: var(--mono);
+        color: var(--text2);
+        letter-spacing: 0.06em;
+        transition: all 0.15s;
+      }
+      .type-tab.active {
+        background: var(--blue-bg);
+        color: var(--blue);
+        border-color: var(--blue);
+      }
+
+      /* ── FORM FIELDS ── */
+      .field {
+        margin-bottom: 11px;
+      }
+      .field label {
+        display: block;
+        font-size: 10px;
+        color: var(--text3);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+        font-family: var(--sans);
+      }
+      .field input,
+      .field select {
+        width: 100%;
+        height: 36px;
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        border-radius: 4px;
+        padding: 0 10px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 13px;
+        transition: border 0.15s;
+        outline: none;
+      }
+      .field input:focus,
+      .field select:focus {
+        border-color: var(--blue);
+      }
+      .field select option {
+        background: var(--bg2);
+      }
+      .hidden {
+        display: none;
+      }
+
+      /* ── PLACE BTN ── */
+      .place-btn {
+        width: 100%;
+        height: 40px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        font-family: var(--mono);
+        transition: all 0.15s;
+        margin-top: 6px;
+      }
+      .place-btn.buy {
+        background: var(--green-bg);
+        color: var(--green);
+        border: 1px solid var(--green-border);
+      }
+      .place-btn.buy:hover {
+        background: #00e67620;
+      }
+      .place-btn.sell {
+        background: var(--red-bg);
+        color: var(--red);
+        border: 1px solid var(--red-border);
+      }
+      .place-btn.sell:hover {
+        background: #ff475720;
+      }
+      .place-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      /* ── TABLES ── */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      .data-table th {
+        text-align: left;
+        padding: 8px 12px;
+        font-size: 10px;
+        color: var(--text3);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--border);
+        font-weight: 500;
+        font-family: var(--sans);
+      }
+      .data-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text2);
+      }
+      .data-table tr:last-child td {
+        border-bottom: none;
+      }
+      .data-table tr:hover td {
+        background: var(--bg4);
+      }
+
+      /* ── BADGES ── */
+      .badge {
+        font-size: 10px;
+        padding: 2px 7px;
+        border-radius: 3px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        font-family: var(--sans);
+      }
+      .badge-buy {
+        background: var(--green-bg);
+        color: var(--green);
+        border: 1px solid var(--green-border);
+      }
+      .badge-sell {
+        background: var(--red-bg);
+        color: var(--red);
+        border: 1px solid var(--red-border);
+      }
+      .badge-filled {
+        background: var(--green-bg);
+        color: var(--green);
+      }
+      .badge-new {
+        background: var(--blue-bg);
+        color: var(--blue);
+      }
+      .badge-cancelled {
+        background: var(--bg4);
+        color: var(--text3);
+      }
+      .badge-market {
+        background: var(--amber-bg);
+        color: var(--amber);
+      }
+
+      /* ── TOAST ── */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        padding: 12px 18px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-family: var(--sans);
+        display: none;
+        z-index: 9999;
+        border: 1px solid;
+        animation: slideUp 0.2s ease;
+        max-width: 340px;
+      }
+      @keyframes slideUp {
+        from {
+          transform: translateY(10px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .toast.success {
+        background: #001a0e;
+        color: var(--green);
+        border-color: var(--green-border);
+      }
+      .toast.error {
+        background: #1a0007;
+        color: var(--red);
+        border-color: var(--red-border);
+      }
+
+      /* ── LOG ── */
+      .log-box {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 10px 12px;
+        height: 140px;
+        overflow-y: auto;
+        font-size: 11px;
+        color: var(--text3);
+        font-family: var(--mono);
+      }
+      .log-line {
+        margin-bottom: 3px;
+      }
+      .log-line.success {
+        color: var(--green);
+      }
+      .log-line.error {
+        color: var(--red);
+      }
+      .log-line.info {
+        color: var(--blue);
+      }
+
+      /* ── REFRESH BTN ── */
+      .refresh-btn {
+        font-size: 10px;
+        padding: 3px 9px;
+        border-radius: 3px;
+        border: 1px solid var(--border2);
+        background: transparent;
+        color: var(--text2);
+        cursor: pointer;
+        font-family: var(--mono);
+        transition: all 0.15s;
+      }
+      .refresh-btn:hover {
+        border-color: var(--blue);
+        color: var(--blue);
+      }
+
+      /* ── CANCEL BTN ── */
+      .cancel-btn {
+        font-size: 10px;
+        padding: 3px 8px;
+        border-radius: 3px;
+        border: 1px solid var(--red-border);
+        background: var(--red-bg);
+        color: var(--red);
+        cursor: pointer;
+        font-family: var(--mono);
+        transition: all 0.15s;
+      }
+      .cancel-btn:hover {
+        background: #ff475720;
+      }
+
+      /* ── EMPTY STATE ── */
+      .empty {
+        padding: 24px;
+        text-align: center;
+        color: var(--text3);
+        font-size: 12px;
+        font-family: var(--sans);
+      }
+
+      /* ── POSITIONS ── */
+      .pos-card {
+        border: 1px solid var(--border2);
+        border-radius: 5px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        background: var(--bg4);
+      }
+      .pos-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .pos-symbol {
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .pos-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text2);
+        margin-bottom: 3px;
+        font-family: var(--sans);
+      }
+      .pos-row span:last-child {
+        color: var(--text);
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 12px 0;
+      }
+
+      /* ── LOADING ── */
+      .loading {
+        color: var(--text3);
+        font-size: 11px;
+        padding: 10px 0;
+        font-family: var(--sans);
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border: 1.5px solid var(--border2);
+        border-top-color: var(--blue);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="logo">BOT<span>TRADE</span></div>
+        <div class="badge-testnet">● TESTNET</div>
+      </div>
+      <div class="topbar-right">
+        <div class="price-ticker">BTC/USDT <span id="btc-price">—</span></div>
+        <div class="price-ticker">ETH/USDT <span id="eth-price">—</span></div>
+        <div
+          style="font-size: 11px; color: var(--text2); font-family: var(--sans)"
+        >
+          <span class="conn-dot"></span>LIVE
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYOUT -->
+    <div class="layout">
+      <!-- SIDEBAR: ORDER FORM -->
+      <div class="sidebar">
+        <div
+          style="
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            color: var(--text3);
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            font-family: var(--sans);
+          "
+        >
+          Place Order
+        </div>
+
+        <div class="side-toggle" id="side-toggle">
+          <button class="side-btn active-buy" onclick="setSide('BUY')">
+            ▲ BUY
+          </button>
+          <button class="side-btn" onclick="setSide('SELL')">▼ SELL</button>
+        </div>
+
+        <div class="type-tabs">
+          <button class="type-tab active" onclick="setType('MARKET', this)">
+            MARKET
+          </button>
+          <button class="type-tab" onclick="setType('LIMIT', this)">
+            LIMIT
+          </button>
+          <button class="type-tab" onclick="setType('STOP_MARKET', this)">
+            STOP
+          </button>
+        </div>
+
+        <div class="field">
+          <label>Symbol</label>
+          <select id="f-symbol" onchange="fetchPrice()">
+            <option>BTCUSDT</option>
+            <option>ETHUSDT</option>
+            <option>BNBUSDT</option>
+            <option>SOLUSDT</option>
+            <option>XRPUSDT</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Quantity</label>
+          <input
+            type="number"
+            id="f-qty"
+            value="0.01"
+            step="0.001"
+            min="0.001"
+            placeholder="0.01"
+          />
+        </div>
+
+        <div class="field hidden" id="price-row">
+          <label id="price-label">Limit Price (USDT)</label>
+          <input
+            type="number"
+            id="f-price"
+            value="65000"
+            step="1"
+            placeholder="65000"
+          />
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Summary -->
+        <div
+          style="
+            font-size: 11px;
+            color: var(--text2);
+            margin-bottom: 12px;
+            font-family: var(--sans);
+            line-height: 1.8;
+          "
+        >
+          <div style="display: flex; justify-content: space-between">
+            <span style="color: var(--text3)">Symbol</span
+            ><span id="s-symbol">BTCUSDT</span>
+          </div>
+          <div style="display: flex; justify-content: space-between">
+            <span style="color: var(--text3)">Side</span
+            ><span id="s-side" style="color: var(--green)">BUY</span>
+          </div>
+          <div style="display: flex; justify-content: space-between">
+            <span style="color: var(--text3)">Type</span
+            ><span id="s-type">MARKET</span>
+          </div>
+          <div style="display: flex; justify-content: space-between">
+            <span style="color: var(--text3)">Qty</span
+            ><span id="s-qty">0.01</span>
+          </div>
+          <div
+            style="display: flex; justify-content: space-between"
+            id="s-price-row"
+          >
+            <span style="color: var(--text3)">Market Price</span
+            ><span id="s-price" style="color: var(--amber)">loading…</span>
+          </div>
+        </div>
+
+        <button class="place-btn buy" id="place-btn" onclick="placeOrder()">
+          ▲ PLACE BUY ORDER
+        </button>
+
+        <div class="divider"></div>
+        <div
+          style="
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            color: var(--text3);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-family: var(--sans);
+          "
+        >
+          Activity Log
+        </div>
+        <div class="log-box" id="log-box">
+          <div class="log-line info">// dashboard started</div>
+          <div class="log-line">// waiting for orders…</div>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div class="main">
+        <!-- METRICS -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Wallet Balance</div>
+            <div class="metric-value" id="m-wallet">—</div>
+            <div class="metric-sub">USDT</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Available Balance</div>
+            <div class="metric-value" id="m-avail">—</div>
+            <div class="metric-sub">USDT</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Unrealized PnL</div>
+            <div class="metric-value" id="m-pnl">—</div>
+            <div class="metric-sub">USDT</div>
+          </div>
+        </div>
+
+        <!-- OPEN ORDERS + POSITIONS ROW -->
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+          "
+        >
+          <!-- OPEN ORDERS -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Open Orders</span>
+              <button class="refresh-btn" onclick="loadOpenOrders()">
+                ↻ refresh
+              </button>
+            </div>
+            <div id="open-orders-body">
+              <div class="empty"><span class="spinner"></span> loading…</div>
+            </div>
+          </div>
+
+          <!-- POSITIONS -->
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Active Positions</span>
+              <button class="refresh-btn" onclick="loadPositions()">
+                ↻ refresh
+              </button>
+            </div>
+            <div class="panel-body" id="positions-body">
+              <div class="empty"><span class="spinner"></span> loading…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORDER HISTORY -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Order History</span>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <select
+                id="hist-symbol"
+                style="
+                  background: var(--bg);
+                  border: 1px solid var(--border2);
+                  color: var(--text2);
+                  padding: 3px 6px;
+                  border-radius: 3px;
+                  font-size: 11px;
+                  font-family: var(--mono);
+                "
+              >
+                <option>BTCUSDT</option>
+                <option>ETHUSDT</option>
+                <option>BNBUSDT</option>
+                <option>SOLUSDT</option>
+              </select>
+              <button class="refresh-btn" onclick="loadHistory()">
+                ↻ refresh
+              </button>
+            </div>
+          </div>
+          <div id="history-body">
+            <div class="empty"><span class="spinner"></span> loading…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+      let currentSide = "BUY";
+      let currentType = "MARKET";
+
+      // ── Helpers ──────────────────────────────────────────
+      function log(msg, type = "") {
+        const box = document.getElementById("log-box");
+        const ts = new Date().toLocaleTimeString();
+        const el = document.createElement("div");
+        el.className = "log-line " + type;
+        el.textContent = `[${ts}] ${msg}`;
+        box.appendChild(el);
+        box.scrollTop = box.scrollHeight;
+      }
+
+      function toast(msg, type = "success") {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.className = "toast " + type;
+        el.style.display = "block";
+        setTimeout(() => (el.style.display = "none"), 4000);
+      }
+
+      function fmt(n, decimals = 2) {
+        const v = parseFloat(n);
+        if (isNaN(v)) return "—";
+        return v.toLocaleString("en-US", {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+        });
+      }
+
+      function updateSummary() {
+        document.getElementById("s-symbol").textContent =
+          document.getElementById("f-symbol").value;
+        document.getElementById("s-qty").textContent =
+          document.getElementById("f-qty").value;
+        document.getElementById("s-side").textContent = currentSide;
+        document.getElementById("s-side").style.color =
+          currentSide === "BUY" ? "var(--green)" : "var(--red)";
+        document.getElementById("s-type").textContent = currentType;
+      }
+
+      // ── Side / Type ──────────────────────────────────────
+      function setSide(side) {
+        currentSide = side;
+        const btns = document.querySelectorAll(".side-btn");
+        btns[0].className = "side-btn" + (side === "BUY" ? " active-buy" : "");
+        btns[1].className =
+          "side-btn" + (side === "SELL" ? " active-sell" : "");
+        const pb = document.getElementById("place-btn");
+        pb.className = "place-btn " + (side === "BUY" ? "buy" : "sell");
+        pb.textContent =
+          side === "BUY" ? "▲ PLACE BUY ORDER" : "▼ PLACE SELL ORDER";
+        updateSummary();
+      }
+
+      function setType(type, el) {
+        currentType = type;
+        document
+          .querySelectorAll(".type-tab")
+          .forEach((t) => t.classList.remove("active"));
+        el.classList.add("active");
+        const pr = document.getElementById("price-row");
+        const pl = document.getElementById("price-label");
+        const spr = document
+          .getElementById("s-price-row")
+          .querySelector("span:first-child");
+        if (type === "LIMIT") {
+          pr.classList.remove("hidden");
+          pl.textContent = "Limit Price (USDT)";
+          spr.textContent = "Limit Price";
+        } else if (type === "STOP_MARKET") {
+          pr.classList.remove("hidden");
+          pl.textContent = "Stop Price (USDT)";
+          spr.textContent = "Stop Price";
+        } else {
+          pr.classList.add("hidden");
+          spr.textContent = "Market Price";
+        }
+        updateSummary();
+      }
+
+      document
+        .getElementById("f-symbol")
+        .addEventListener("change", updateSummary);
+      document.getElementById("f-qty").addEventListener("input", updateSummary);
+      document
+        .getElementById("f-price")
+        .addEventListener("input", updateSummary);
+
+      // ── Fetch live price ─────────────────────────────────
+      async function fetchPrice() {
+        const sym = document.getElementById("f-symbol").value;
+        try {
+          const r = await fetch(`/api/price/${sym}`);
+          const d = await r.json();
+          if (d.price) {
+            document.getElementById("s-price").textContent =
+              "$" + fmt(d.price, 2);
+          }
+        } catch (e) {}
+      }
+
+      async function fetchTickers() {
+        try {
+          const [b, e] = await Promise.all([
+            fetch("/api/price/BTCUSDT").then((r) => r.json()),
+            fetch("/api/price/ETHUSDT").then((r) => r.json()),
+          ]);
+          if (b.price)
+            document.getElementById("btc-price").textContent =
+              "$" + fmt(b.price, 0);
+          if (e.price)
+            document.getElementById("eth-price").textContent =
+              "$" + fmt(e.price, 0);
+        } catch (e) {}
+      }
+
+      // ── Balance ──────────────────────────────────────────
+      async function loadBalance() {
+        try {
+          const r = await fetch("/api/balance");
+          const d = await r.json();
+          if (d.error) {
+            log("Balance error: " + d.error, "error");
+            return;
+          }
+          document.getElementById("m-wallet").textContent = fmt(
+            d.walletBalance,
+          );
+          document.getElementById("m-avail").textContent = fmt(
+            d.availableBalance,
+          );
+          const pnl = parseFloat(d.unrealizedProfit);
+          const el = document.getElementById("m-pnl");
+          el.textContent = (pnl >= 0 ? "+" : "") + fmt(d.unrealizedProfit);
+          el.className = "metric-value " + (pnl >= 0 ? "green" : "red");
+          log("Balance loaded", "success");
+        } catch (e) {
+          log("Failed to load balance", "error");
+        }
+      }
+
+      // ── Open Orders ──────────────────────────────────────
+      async function loadOpenOrders() {
+        const body = document.getElementById("open-orders-body");
+        body.innerHTML =
+          '<div class="empty"><span class="spinner"></span> loading…</div>';
+        try {
+          const r = await fetch("/api/orders");
+          const d = await r.json();
+          if (d.error) {
+            body.innerHTML = `<div class="empty">${d.error}</div>`;
+            return;
+          }
+          if (!d.length) {
+            body.innerHTML = '<div class="empty">No open orders</div>';
+            return;
+          }
+          body.innerHTML = `<table class="data-table">
+        <thead><tr>
+          <th>ID</th><th>Symbol</th><th>Side</th><th>Type</th><th>Qty</th><th>Price</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody>
+          ${d
+            .map(
+              (o) => `<tr>
+            <td style="color:var(--text3)">#${o.orderId}</td>
+            <td style="color:#fff;font-weight:500">${o.symbol}</td>
+            <td><span class="badge badge-${o.side.toLowerCase()}">${o.side}</span></td>
+            <td><span class="badge badge-market">${o.type}</span></td>
+            <td>${o.origQty}</td>
+            <td>${parseFloat(o.price) > 0 ? "$" + fmt(o.price) : "—"}</td>
+            <td><span class="badge badge-${o.status.toLowerCase()}">${o.status}</span></td>
+            <td><button class="cancel-btn" onclick="cancelOrder('${o.symbol}',${o.orderId})">✕</button></td>
+          </tr>`,
+            )
+            .join("")}
+        </tbody>
+      </table>`;
+        } catch (e) {
+          body.innerHTML = '<div class="empty">Failed to load orders</div>';
+        }
+      }
+
+      async function cancelOrder(symbol, orderId) {
+        log(`Cancelling order #${orderId}…`);
+        try {
+          const r = await fetch(
+            `/api/cancel-order?symbol=${symbol}&orderId=${orderId}`,
+            { method: "DELETE" },
+          );
+          const d = await r.json();
+          if (d.error) {
+            toast("Cancel failed: " + d.error, "error");
+            log("Cancel failed: " + d.error, "error");
+            return;
+          }
+          toast(`Order #${orderId} cancelled`, "success");
+          log(`Order #${orderId} cancelled`, "success");
+          loadOpenOrders();
+        } catch (e) {
+          toast("Error cancelling order", "error");
+        }
+      }
+
+      // ── Positions ────────────────────────────────────────
+      async function loadPositions() {
+        const body = document.getElementById("positions-body");
+        body.innerHTML =
+          '<div class="empty"><span class="spinner"></span> loading…</div>';
+        try {
+          const r = await fetch("/api/positions");
+          const d = await r.json();
+          if (d.error) {
+            body.innerHTML = `<div class="empty">${d.error}</div>`;
+            return;
+          }
+          if (!d.length) {
+            body.innerHTML = '<div class="empty">No active positions</div>';
+            return;
+          }
+          body.innerHTML = d
+            .map((p) => {
+              const pnl = parseFloat(p.unRealizedProfit);
+              const side = parseFloat(p.positionAmt) > 0 ? "LONG" : "SHORT";
+              return `<div class="pos-card">
+          <div class="pos-top">
+            <span class="pos-symbol">${p.symbol}</span>
+            <span class="badge badge-${side === "LONG" ? "buy" : "sell"}">${side}</span>
+          </div>
+          <div class="pos-row"><span>Entry Price</span><span>$${fmt(p.entryPrice)}</span></div>
+          <div class="pos-row"><span>Mark Price</span><span>$${fmt(p.markPrice)}</span></div>
+          <div class="pos-row"><span>Position</span><span>${p.positionAmt}</span></div>
+          <div class="pos-row"><span>PnL</span><span style="color:${pnl >= 0 ? "var(--green)" : "var(--red)"}">${pnl >= 0 ? "+" : ""}${fmt(p.unRealizedProfit)}</span></div>
+          <div class="pos-row"><span>Leverage</span><span>${p.leverage}x</span></div>
+        </div>`;
+            })
+            .join("");
+        } catch (e) {
+          body.innerHTML = '<div class="empty">Failed to load positions</div>';
+        }
+      }
+
+      // ── Order History ────────────────────────────────────
+      async function loadHistory() {
+        const body = document.getElementById("history-body");
+        const sym = document.getElementById("hist-symbol").value;
+        body.innerHTML =
+          '<div class="empty"><span class="spinner"></span> loading…</div>';
+        try {
+          const r = await fetch(`/api/order-history?symbol=${sym}`);
+          const d = await r.json();
+          if (d.error) {
+            body.innerHTML = `<div class="empty">${d.error}</div>`;
+            return;
+          }
+          if (!d.length) {
+            body.innerHTML = '<div class="empty">No order history</div>';
+            return;
+          }
+          body.innerHTML = `<table class="data-table">
+        <thead><tr>
+          <th>ID</th><th>Symbol</th><th>Side</th><th>Type</th><th>Qty</th><th>Exec Qty</th><th>Avg Price</th><th>Status</th><th>Time</th>
+        </tr></thead>
+        <tbody>
+          ${d
+            .slice(0, 20)
+            .map((o) => {
+              const t = new Date(o.updateTime).toLocaleString();
+              return `<tr>
+              <td style="color:var(--text3)">#${o.orderId}</td>
+              <td style="color:#fff;font-weight:500">${o.symbol}</td>
+              <td><span class="badge badge-${o.side.toLowerCase()}">${o.side}</span></td>
+              <td><span class="badge badge-market">${o.type}</span></td>
+              <td>${o.origQty}</td>
+              <td>${o.executedQty}</td>
+              <td>${parseFloat(o.avgPrice) > 0 ? "$" + fmt(o.avgPrice) : "—"}</td>
+              <td><span class="badge badge-${o.status.toLowerCase()}">${o.status}</span></td>
+              <td style="color:var(--text3);font-size:11px">${t}</td>
+            </tr>`;
+            })
+            .join("")}
+        </tbody>
+      </table>`;
+        } catch (e) {
+          body.innerHTML = '<div class="empty">Failed to load history</div>';
+        }
+      }
+
+      document
+        .getElementById("hist-symbol")
+        .addEventListener("change", loadHistory);
+
+      // ── Place Order ──────────────────────────────────────
+      async function placeOrder() {
+        const btn = document.getElementById("place-btn");
+        btn.disabled = true;
+        btn.textContent = "⏳ placing…";
+
+        const symbol = document.getElementById("f-symbol").value;
+        const qty = document.getElementById("f-qty").value;
+        const price = document.getElementById("f-price").value;
+
+        const body = {
+          symbol,
+          quantity: qty,
+          side: currentSide,
+          order_type: currentType,
+        };
+        if (currentType === "LIMIT") body.price = price;
+        if (currentType === "STOP_MARKET") body.stop_price = price;
+
+        log(`Placing ${currentType} ${currentSide} ${qty} ${symbol}…`);
+
+        try {
+          const r = await fetch("/api/place-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const d = await r.json();
+
+          if (d.error) {
+            toast("❌ " + d.error, "error");
+            log("Order failed: " + d.error, "error");
+          } else {
+            toast(`✅ Order #${d.orderId} — ${d.status}`, "success");
+            log(`Order #${d.orderId} placed → ${d.status}`, "success");
+            loadOpenOrders();
+            loadBalance();
+            loadHistory();
+          }
+        } catch (e) {
+          toast("❌ Network error", "error");
+          log("Network error: " + e.message, "error");
+        }
+
+        setSide(currentSide);
+        btn.disabled = false;
+      }
+
+      // ── Init ─────────────────────────────────────────────
+      function init() {
+        loadBalance();
+        loadOpenOrders();
+        loadPositions();
+        loadHistory();
+        fetchTickers();
+        fetchPrice();
+        setInterval(fetchTickers, 5000);
+        setInterval(fetchPrice, 5000);
+        setInterval(loadBalance, 15000);
+      }
+
+      window.addEventListener("DOMContentLoaded", init);
+    </script>
+  </body>
+</html>
